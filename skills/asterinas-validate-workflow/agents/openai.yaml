@@ -1,0 +1,4 @@
+interface:
+  display_name: "Asterinas Validate Workflow"
+  short_description: "Run Asterinas validation through Makefile workflows"
+  default_prompt: "Use $asterinas-validate-workflow to choose and run the right Asterinas validation workflow."

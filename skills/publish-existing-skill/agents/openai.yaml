@@ -1,0 +1,4 @@
+interface:
+  display_name: "Publish Existing Skill"
+  short_description: "Publish local skills to a GitHub skill repo"
+  default_prompt: "Use $publish-existing-skill to copy, validate, document, commit, and push an existing local Codex skill to a GitHub repository."
