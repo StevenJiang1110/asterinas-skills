@@ -1,6 +1,6 @@
 ---
 name: asterinas-validate-workflow
-description: Asterinas project post-code-change validation and test workflow guide. Use whenever Codex works in /root/asterinas and has edited, implemented, fixed, refactored, or generated code and needs the appropriate after-change validation flow, even if the user did not explicitly ask to run tests. Also use for build, format, lint, verify, test, regression tests, conformance tests, gVisor tests, initramfs changes, pre-commit checks, CI/PR/issue inspection with gh, or Chinese/English prompts such as 改完代码, 修改代码后, 写完代码, 修复后验证, 跑一下验证, 验证, 运行测试, 回归测试, 提交前检查, 编译检查, after editing code, after code changes, post-change validation, run tests, gVisor, conformance, regression, initramfs, make kernel, make check, make run_kernel, or make initramfs.
+description: Asterinas project post-code-change validation, commit hygiene, and test workflow guide. Use whenever Codex works in /root/asterinas and has edited, implemented, fixed, refactored, or generated code and needs the appropriate after-change validation flow, even if the user did not explicitly ask to run tests. Also use for build, format, lint, verify, test, regression tests, conformance tests, gVisor tests, initramfs changes, pre-commit checks, amend, fixup, autosquash, interactive rebase, commit atomicity, force push, CI/PR/issue investigation, GitHub review comment replies or resolving comments with gh, or Chinese/English prompts such as 改完代码, 修改代码后, 写完代码, 修复后验证, 跑一下验证, 验证, 运行测试, 回归测试, 提交前检查, 编译检查, amend提交, 修正提交, 合并到合适的commit, 保持commit原子性, 回复/resolve PR comment, after editing code, after code changes, post-change validation, run tests, gVisor, conformance, regression, initramfs, make kernel, make check, make run_kernel, or make initramfs.
 ---
 
 # Asterinas Validate Workflow
@@ -72,6 +72,14 @@ gVisor tests live in `test/initramfs/src/conformance/gvisor`.
 - Do not try to override gVisor Makefile variables by passing environment variables on the command line; that Makefile is consumed inside the Nix build, so direct environment overrides are not reliable.
 
 ## Git Discipline
+
+When the user asks to amend, do not blindly amend the current `HEAD`.
+First map each local change to the commit that should have introduced it.
+Amend or fix up one or more earliest appropriate commits so every commit remains
+atomic and complete. A later commit must not repair, rename, revert, or clean up
+something that belongs in an earlier commit. After rewriting, inspect the
+per-commit diff/log to ensure the stack has no avoidable "introduce then fix"
+history.
 
 Before creating a commit, validate with:
 

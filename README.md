@@ -4,7 +4,7 @@ Codex skills for Asterinas development workflows.
 
 ## Available Skills
 
-- `asterinas-validate-workflow`: chooses the right Asterinas validation workflow after code changes.
+- `asterinas-validate-workflow`: chooses the right Asterinas validation and commit hygiene workflow after code changes.
 - `publish-existing-skill`: imports an existing local Codex skill into this GitHub skill collection and pushes it.
 
 ## Install
