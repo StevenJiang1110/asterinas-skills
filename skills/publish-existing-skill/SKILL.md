@@ -27,6 +27,26 @@ Use this workflow to import an already-authored skill into a shared repository w
    python3 /root/.codex/skills/.system/skill-creator/scripts/quick_validate.py skills/<skill-name>
    ```
 
+   If validation fails because the host Python cannot import PyYAML, retry from
+   a temporary virtual environment instead of installing packages globally:
+
+   ```bash
+   python3 /root/.codex/skills/.system/skill-creator/scripts/quick_validate.py skills/<skill-name> 2>/tmp/skill-validate.err || {
+     if grep -q "No module named 'yaml'" /tmp/skill-validate.err; then
+       python3 -m venv /tmp/skill-validate-venv
+       /tmp/skill-validate-venv/bin/python -m pip install PyYAML
+       /tmp/skill-validate-venv/bin/python /root/.codex/skills/.system/skill-creator/scripts/quick_validate.py skills/<skill-name>
+     else
+       cat /tmp/skill-validate.err >&2
+       exit 1
+     fi
+   }
+   ```
+
+   Keep the direct validation failure visible for non-PyYAML errors. A virtual
+   environment is only a dependency fallback, not a way to bypass invalid skill
+   metadata.
+
 6. Update the repository README with installation instructions and the skill list. Include the exact destination path for installation.
 7. Check the repository diff, commit atomically, and push.
 
