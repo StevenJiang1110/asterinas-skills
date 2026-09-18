@@ -1,0 +1,4 @@
+interface:
+  display_name: "Linux Source Reader"
+  short_description: "Locate, fetch, and analyze Linux kernel source"
+  default_prompt: "Use $linux-source-reader to locate the Linux tree and explain this kernel code path."
