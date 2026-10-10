@@ -5,6 +5,7 @@ A personal collection of Codex skills maintained by StevenJiang1110 for Asterina
 ## Available Skills
 
 - `asterinas-validate-workflow`: chooses the right Asterinas validation and commit hygiene workflow after code changes.
+- `asterinas-regression-test`: writes and reviews Asterinas regression tests using the project's macro conventions and Linux/Asterinas validation workflow.
 - `publish-existing-skill`: imports an existing local Codex skill into this GitHub skill collection and pushes it.
 - `technical-writing`: drafts technical documents with concrete problem statements, causal explanations, precise semantic distinctions, and actionable proposals.
 - `linux-source-reader`: locates, fetches, navigates, and explains Linux kernel source code and its build/configuration wiring.
@@ -23,6 +24,7 @@ To install individual skills, copy the ones you want:
 
 ```bash
 cp -a asterinas-skills/skills/asterinas-validate-workflow "${CODEX_HOME:-$HOME/.codex}/skills/"
+cp -a asterinas-skills/skills/asterinas-regression-test "${CODEX_HOME:-$HOME/.codex}/skills/"
 cp -a asterinas-skills/skills/publish-existing-skill "${CODEX_HOME:-$HOME/.codex}/skills/"
 cp -a asterinas-skills/skills/technical-writing "${CODEX_HOME:-$HOME/.codex}/skills/"
 cp -a asterinas-skills/skills/linux-source-reader "${CODEX_HOME:-$HOME/.codex}/skills/"

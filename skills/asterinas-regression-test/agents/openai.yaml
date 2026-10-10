@@ -1,0 +1,4 @@
+interface:
+  display_name: "Asterinas Regression Test"
+  short_description: "Write and review Asterinas regression tests"
+  default_prompt: "Use $asterinas-regression-test to write or review an Asterinas regression test and validate it on Linux and Asterinas."
