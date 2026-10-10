@@ -101,6 +101,7 @@ fn caller(value: usize) -> Option<usize> {
 
 def finding(pattern: str, line: int, confidence: str = "high") -> dict[str, object]:
     return {
+        "occurrence_id": f"{pattern}-{line}",
         "pattern_id": pattern,
         "confidence": confidence,
         "path": "sample.rs",
@@ -137,7 +138,49 @@ def test_judgment() -> None:
         finding("AP-REF", 2),
         finding("AP-DOC", 3),
     ]
-    assert judge.calculate(balanced_pass, "balanced")["verdict"] == "reasonable_suspicion"
+    assert judge.calculate(balanced_pass, "balanced")["verdict"] == "insufficient_evidence"
+
+    # Arbitrarily many weak signals must not trigger the default or balanced verdict.
+    weak_only = [finding(pattern, line) for pattern in judge.WEAK_PATTERNS for line in range(1, 21)]
+    for mode in ("balanced", "conservative"):
+        assert judge.calculate(weak_only, mode)["verdict"] == "insufficient_evidence"
+    assert judge.calculate([finding("AP-DOC", 1)], "lenient")["verdict"] == "insufficient_evidence"
+    assert judge.calculate([finding("AP-DOC", 1), finding("AP-DEFENSIVE", 2)], "lenient")["verdict"] == "reasonable_suspicion"
+
+    strong_pair = [finding("AP-REF", 1), finding("AP-CONTEXT", 2)]
+    assert judge.calculate(strong_pair, "balanced")["verdict"] == "reasonable_suspicion"
+    assert judge.calculate(strong_pair, "conservative")["verdict"] == "insufficient_evidence"
+    assert judge.calculate(strong_pair + [finding("AP-REF", 3)], "conservative")["verdict"] == "reasonable_suspicion"
+    assert judge.calculate([finding("AP-REF", n) for n in range(1, 5)], "conservative")["verdict"] == "insufficient_evidence"
+
+    mixed = [finding("AP-REF", 1), finding("AP-DOC", 2), finding("AP-DEFENSIVE", 3)]
+    assert judge.calculate(mixed, "balanced")["verdict"] == "reasonable_suspicion"
+    assert judge.calculate(mixed, "conservative")["verdict"] == "insufficient_evidence"
+    assert judge.calculate(mixed + [finding("AP-REF", 4)], "conservative")["verdict"] == "reasonable_suspicion"
+
+    copied = finding("AP-REF", 1)
+    copied["locations"] = [{"path": "sample.rs", "line": n} for n in range(1, 10)]
+    result = judge.calculate([copied, copied], "conservative")
+    assert result["high_confidence_occurrences"] == 1
+    assert result["verdict"] == "insufficient_evidence"
+
+    # Secondary labels cannot multiply one occurrence's weight.
+    copied["related_pattern_ids"] = ["AP-CONTEXT", "AP-DOC"]
+    assert judge.calculate([copied], "balanced")["high_confidence_patterns"] == 1
+
+    bad_inputs = [
+        [{**finding("AP-REF", 1), "pattern_id": "AP-UNKNOWN"}],
+        [{**finding("AP-REF", 1), "occurrence_id": ""}],
+        [{**finding("AP-REF", 1), "line": 0}],
+        [finding("AP-REF", 1), {**finding("AP-DOC", 2), "occurrence_id": "AP-REF-1"}],
+    ]
+    for invalid in bad_inputs:
+        try:
+            judge.calculate(invalid, "conservative")
+        except ValueError:
+            pass
+        else:
+            raise AssertionError("invalid high-confidence finding was accepted")
 
 
 def main() -> int:

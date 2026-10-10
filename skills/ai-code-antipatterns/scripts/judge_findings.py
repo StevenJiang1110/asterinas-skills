@@ -11,24 +11,24 @@ from pathlib import Path
 from typing import Any
 
 
-MODES = {
-    "lenient": {
-        "min_patterns": 1,
-        "min_occurrences": 1,
-        "min_repeated_patterns": 0,
-    },
-    "balanced": {
-        "min_patterns": 2,
-        "min_occurrences": 3,
-        "min_repeated_patterns": 1,
-    },
-    "conservative": {
-        "min_patterns": 3,
-        "min_occurrences": 3,
-        "min_repeated_patterns": 2,
-    },
-}
+STRONG_PATTERNS = frozenset({"AP-REF", "AP-WRAP", "AP-CONTEXT", "AP-SCOPE"})
+WEAK_PATTERNS = frozenset({"AP-DEFENSIVE", "AP-DOC", "AP-REINVENT", "AP-UPSTREAM"})
 
+# Each mode passes if any alternative satisfies all its minimum counts.
+MODES = {
+    "lenient": [
+        {"strong_occurrences": 1},
+        {"weak_occurrences": 2, "weak_patterns": 2},
+    ],
+    "balanced": [
+        {"strong_occurrences": 2, "strong_patterns": 2},
+        {"strong_occurrences": 1, "weak_occurrences": 2, "patterns": 3},
+    ],
+    "conservative": [
+        {"strong_occurrences": 3, "strong_patterns": 2},
+        {"strong_occurrences": 2, "weak_occurrences": 2, "patterns": 3},
+    ],
+}
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
@@ -60,50 +60,57 @@ def load_findings(path: Path) -> tuple[str | None, list[dict[str, Any]]]:
     return data.get("scope"), data["findings"]
 
 
-def locations_for(finding: dict[str, Any], index: int) -> list[str]:
-    locations = finding.get("locations")
-    if isinstance(locations, list) and locations:
-        result: list[str] = []
-        for location_index, location in enumerate(locations):
-            if not isinstance(location, dict):
-                continue
-            path = location.get("path", "<unknown>")
-            line = location.get("line", "?")
-            result.append(f"{path}:{line}")
-        if result:
-            return result
-    path = finding.get("path", "<unknown>")
-    line = finding.get("line", "?")
-    fallback = f"finding-{index}" if path == "<unknown>" and line == "?" else f"{path}:{line}"
-    return [fallback]
-
-
 def calculate(findings: list[dict[str, Any]], mode: str) -> dict[str, Any]:
-    occurrences: set[tuple[str, str]] = set()
+    occurrences: dict[str, str] = {}
     ignored = 0
     for index, finding in enumerate(findings):
+        if not isinstance(finding, dict):
+            raise ValueError(f"finding {index} must be an object")
         if finding.get("confidence") != "high":
             ignored += 1
             continue
         pattern = finding.get("pattern_id")
-        if not isinstance(pattern, str) or not pattern:
-            raise ValueError(f"high-confidence finding {index} has no pattern_id")
-        for location in locations_for(finding, index):
-            occurrences.add((pattern, location))
+        if not isinstance(pattern, str) or pattern not in STRONG_PATTERNS | WEAK_PATTERNS:
+            raise ValueError(f"high-confidence finding {index} has an unknown pattern_id")
+        occurrence_id = finding.get("occurrence_id")
+        if not isinstance(occurrence_id, str) or not occurrence_id.strip():
+            raise ValueError(f"high-confidence finding {index} needs an occurrence_id")
+        locations = finding.get("locations", [finding])
+        if not isinstance(locations, list) or not locations:
+            raise ValueError(f"high-confidence finding {index} needs source locations")
+        for location in locations:
+            if (
+                not isinstance(location, dict)
+                or not isinstance(location.get("path"), str)
+                or not location["path"].strip()
+                or type(location.get("line")) is not int
+                or location["line"] < 1
+            ):
+                raise ValueError(f"high-confidence finding {index} needs concrete path and line")
+        if occurrence_id in occurrences and occurrences[occurrence_id] != pattern:
+            raise ValueError(f"occurrence {occurrence_id!r} has conflicting primary patterns")
+        occurrences[occurrence_id] = pattern
 
-    counts = Counter(pattern for pattern, _ in occurrences)
+    counts = Counter(occurrences.values())
     repeated = sorted(pattern for pattern, count in counts.items() if count >= 2)
+    metrics = {
+        "strong_occurrences": sum(count for pattern, count in counts.items() if pattern in STRONG_PATTERNS),
+        "weak_occurrences": sum(count for pattern, count in counts.items() if pattern in WEAK_PATTERNS),
+        "strong_patterns": len(counts.keys() & STRONG_PATTERNS),
+        "weak_patterns": len(counts.keys() & WEAK_PATTERNS),
+        "patterns": len(counts),
+    }
     threshold = MODES[mode]
-    satisfied = (
-        len(counts) >= threshold["min_patterns"]
-        and len(occurrences) >= threshold["min_occurrences"]
-        and len(repeated) >= threshold["min_repeated_patterns"]
+    satisfied = any(
+        all(metrics[key] >= minimum for key, minimum in alternative.items())
+        for alternative in threshold
     )
     return {
         "mode": mode,
         "verdict": "reasonable_suspicion" if satisfied else "insufficient_evidence",
         "high_confidence_patterns": len(counts),
         "high_confidence_occurrences": len(occurrences),
+        "signal_counts": metrics,
         "repeated_patterns": repeated,
         "occurrences_by_pattern": dict(sorted(counts.items())),
         "ignored_non_high_findings": ignored,
@@ -125,6 +132,8 @@ def render_markdown(scope: str | None, result: dict[str, Any]) -> str:
         f"- Calibration: `{result['mode']}`",
         f"- High-confidence patterns: {result['high_confidence_patterns']}",
         f"- High-confidence occurrences: {result['high_confidence_occurrences']}",
+        f"- Strong signals: {result['signal_counts']['strong_occurrences']} occurrences across {result['signal_counts']['strong_patterns']} patterns",
+        f"- Weak signals: {result['signal_counts']['weak_occurrences']} occurrences across {result['signal_counts']['weak_patterns']} patterns",
         f"- Repeated patterns: {repeated}",
     ]
     return "\n".join(lines) + "\n"

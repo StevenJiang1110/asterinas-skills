@@ -9,7 +9,7 @@ A personal collection of Codex skills maintained by StevenJiang1110 for Asterina
 - `publish-existing-skill`: imports an existing local Codex skill into this GitHub skill collection and pushes it.
 - `technical-writing`: drafts technical documents with concrete problem statements, causal explanations, precise semantic distinctions, and actionable proposals.
 - `linux-source-reader`: locates, fetches, navigates, and explains Linux kernel source code and its build/configuration wiring.
-- `ai-code-antipatterns`: reviews, judges, or fixes recurring AI-generated code anti-patterns using an embedded evidence catalog.
+- `ai-code-antipatterns`: reviews, judges, or fixes recurring AI-generated code anti-patterns using an embedded evidence catalog; judgment distinguishes strong and weak signals, and weak signals alone cannot trigger the default verdict.
 
 ## Install
 

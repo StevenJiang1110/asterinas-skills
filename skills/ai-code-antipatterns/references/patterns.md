@@ -2,7 +2,22 @@
 
 The catalog is intentionally narrow. A finding must show the stated mechanism, not merely resemble a keyword or code shape.
 
+## Judgment signal strength
+
+Signal strength describes how much a verified pattern supports suspicion of unchecked vibe coding. It is separate from the finding's impact and from confidence that the pattern actually applies. Even a strong pattern counts only after high-confidence semantic verification.
+
+| Signal strength | Patterns |
+| --- | --- |
+| Strong | `AP-REF`, `AP-WRAP`, `AP-CONTEXT`, `AP-SCOPE` |
+| Weak | `AP-DEFENSIVE`, `AP-DOC`, `AP-REINVENT`, `AP-UPSTREAM` |
+
+Strong signals more directly suggest an unchecked reference, unnecessary abstraction, unremoved conversation context, or an uninspected patch boundary. Weak signals have more plausible explanations in ordinary engineering habits or design choices and serve as supporting evidence. Weak signals alone cannot trigger the default conservative verdict or the balanced verdict, regardless of their number.
+
+These are judgment categories, not statistical estimates of AI authorship. Follow [judge-mode.md](judge-mode.md) for combinations and independent-occurrence counting.
+
 ## AP-REF: Unverified references
+
+**Judgment signal: strong.**
 
 AI-generated code often supplies a reference that looks precise but was not checked. The URL may point to unrelated code, use an unstable revision, contain a fabricated anchor, or fail to support the accompanying semantic claim.
 
@@ -12,6 +27,8 @@ Case: In [Asterinas PR #3365](https://github.com/asterinas/asterinas/pull/3365#d
 
 ## AP-WRAP: Trivial one-off wrappers
 
+**Judgment signal: strong.**
+
 The code extracts a short expression into a helper used only once, but the helper establishes no stable concept, policy, invariant, ownership boundary, or reusable operation. Understanding the caller now requires an unnecessary jump.
 
 Line count alone is not evidence. A one-line helper may be valuable when it names a domain concept, centralizes unsafe or fallible behavior, enforces an invariant, or is expected to gain real callers immediately.
@@ -19,6 +36,8 @@ Line count alone is not evidence. A one-line helper may be valuable when it name
 Case: In [Asterinas PR #3888](https://github.com/asterinas/asterinas/pull/3888#discussion_r4196009561), `get_standard_property` performed two map lookups, had one caller, and added no semantic boundary. The review requested inlining it.
 
 ## AP-DEFENSIVE: Defensive code that ignores proven invariants
+
+**Judgment signal: weak.**
 
 The code mechanically uses fallible arithmetic, checked conversions, redundant validation, unnecessary cleanup, or propagated errors even though nearby types and established invariants make the failure impossible. This fabricates error semantics and obscures the boundaries that are actually attacker- or user-controlled.
 
@@ -28,6 +47,8 @@ Case: In [Asterinas PR #3925](https://github.com/asterinas/asterinas/pull/3925#d
 
 ## AP-DOC: Documentation that restates syntax instead of intent
 
+**Judgment signal: weak.**
+
 Comments or docs merely paraphrase a field name, function name, return type, lock type, or ordinary language rule. Other variants are generated mini-tutorials, repeated boilerplate on adjacent items, and prose whose meaning remains unclear despite its length.
 
 Do not flag concise API summaries that are required by public-documentation conventions or that help navigation. The key question is whether the text tells a maintainer anything not already apparent from the declaration.
@@ -35,6 +56,8 @@ Do not flag concise API summaries that are required by public-documentation conv
 Case: In [Asterinas PR #3699](https://github.com/asterinas/asterinas/pull/3699#discussion_r4068179795), a method returning `&Mutex<VhostRuntimeState<_>>` was documented as returning runtime state protected by a mutex. The type already conveyed that fact.
 
 ## AP-CONTEXT: Patch or conversation context leaked into permanent code
+
+**Judgment signal: strong.**
 
 Permanent source text speaks as if it were replying to the current prompt, review, or patch. Typical phrases include “this PR”, “as requested”, “in this change”, or “for this task”. After merge, the comment no longer describes the code without historical context.
 
@@ -44,6 +67,8 @@ Case: In [Asterinas PR #3365](https://github.com/asterinas/asterinas/pull/3365#d
 
 ## AP-REINVENT: Locally polished reimplementation of existing facilities
 
+**Judgment signal: weak.**
+
 The new code is complete and plausible in isolation but recreates an equivalent helper, abstraction, test double, constant, or validation rule already available in the repository. This pattern reflects local prompt completion without repository-level awareness.
 
 Generic duplication is not enough. Verify that the existing facility has the same semantics and is usable or can be made usable without creating a worse dependency or abstraction boundary.
@@ -52,6 +77,8 @@ Case: In [Asterinas PR #3699](https://github.com/asterinas/asterinas/pull/3699#d
 
 ## AP-UPSTREAM: Copying upstream internals instead of upstream behavior
 
+**Judgment signal: weak.**
+
 The implementation mirrors an upstream function split, name, temporary, or call sequence without checking whether that internal structure fits the local architecture. The goal is compatibility with observable semantics, not structural similarity to one upstream revision.
 
 Do not flag intentional structural alignment that is justified by future synchronization, a shared ABI, or a local design that genuinely matches upstream.
@@ -59,6 +86,8 @@ Do not flag intentional structural alignment that is justified by future synchro
 Case: In [Asterinas PR #3365](https://github.com/asterinas/asterinas/pull/3365#discussion_r3628791883), the code performed `get_xattr` before `remove_xattr` to mirror Linux's killpriv split. Asterinas's `remove_xattr` already handled absence, so the copied preflight step was redundant.
 
 ## AP-SCOPE: Unrelated edits bundled into the change
+
+**Judgment signal: strong.**
 
 The patch performs opportunistic cleanup outside its stated goal while changing nearby code. Common forms include altering unrelated comments, adding or removing blank lines, renaming unaffected locals, or reformatting logic that the requested behavior does not touch. These changes create review noise and often indicate that a generated patch was accepted without checking every hunk against the requested task.
 

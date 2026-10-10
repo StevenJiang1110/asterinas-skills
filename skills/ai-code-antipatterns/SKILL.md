@@ -22,7 +22,7 @@ Record the resolved scope in review and judge reports. For fix mode, treat it as
 ## Shared evidence rules
 
 Read [references/patterns.md](references/patterns.md) completely before analyzing code.
-That file is the skill's fixed, authoritative pattern catalog. Never ask the user to
+That file is the skill's fixed, authoritative pattern catalog, including judgment signal strengths. Signal strength is separate from impact and finding confidence. Never ask the user to
 provide or restate the patterns. Change the catalog only when the user explicitly
 asks to evolve the skill itself.
 
