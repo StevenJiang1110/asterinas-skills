@@ -1,6 +1,6 @@
 # Asterinas Skills
 
-Codex skills for Asterinas development workflows.
+A personal collection of Codex skills maintained by StevenJiang1110 for Asterinas and systems development workflows. This repository is not an official Asterinas project and is not maintained or endorsed by the Asterinas organization.
 
 ## Available Skills
 
@@ -12,33 +12,26 @@ Codex skills for Asterinas development workflows.
 
 ## Install
 
-Clone the repository and copy the skills you want into your Codex skills directory:
+Clone the repository and create your Codex skills directory:
 
 ```bash
 git clone https://github.com/StevenJiang1110/asterinas-skills.git
 mkdir -p "${CODEX_HOME:-$HOME/.codex}/skills"
-cp -a asterinas-skills/skills/asterinas-validate-workflow "${CODEX_HOME:-$HOME/.codex}/skills/"
 ```
 
-To install `technical-writing` and `linux-source-reader`:
+To install individual skills, copy the ones you want:
 
 ```bash
+cp -a asterinas-skills/skills/asterinas-validate-workflow "${CODEX_HOME:-$HOME/.codex}/skills/"
+cp -a asterinas-skills/skills/publish-existing-skill "${CODEX_HOME:-$HOME/.codex}/skills/"
 cp -a asterinas-skills/skills/technical-writing "${CODEX_HOME:-$HOME/.codex}/skills/"
 cp -a asterinas-skills/skills/linux-source-reader "${CODEX_HOME:-$HOME/.codex}/skills/"
-```
-
-To install the AI code anti-pattern skill at
-`${CODEX_HOME:-$HOME/.codex}/skills/ai-code-antipatterns`:
-
-```bash
 cp -a asterinas-skills/skills/ai-code-antipatterns "${CODEX_HOME:-$HOME/.codex}/skills/"
 ```
 
 To install every skill in this repository:
 
 ```bash
-git clone https://github.com/StevenJiang1110/asterinas-skills.git
-mkdir -p "${CODEX_HOME:-$HOME/.codex}/skills"
 cp -a asterinas-skills/skills/* "${CODEX_HOME:-$HOME/.codex}/skills/"
 ```
 
