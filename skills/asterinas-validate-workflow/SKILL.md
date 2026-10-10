@@ -23,7 +23,7 @@ Choose the narrowest workflow that proves the change:
 - **Formatting only:** run `make format`.
 - **Quick compile check after code edits:** run `make format` then `make kernel`.
 - **Regression test source or kernel behavior change:** build test binaries with `make initramfs ENABLE_REGRESSION_TEST=true`, locate the relevant built binary under `test/initramfs/build/initramfs/test/**`, run that binary on host Linux when meaningful, then run `make run_kernel AUTO_TEST=regression`.
-- **CI gVisor failure reproduction:** do not run the full gVisor suite by default. Identify the failed gVisor binary or binaries from CI logs, temporarily package only those tests, and run the gVisor conformance command.
+- **CI gVisor failure reproduction:** do not run the full gVisor suite by default. Identify the failed gVisor binary and, when available, its failed GoogleTest case from CI logs. Select them with `CONFORMANCE_TEST_SELECTOR` and `CONFORMANCE_TEST_GVISOR_FILTER`; do not edit test lists or blocklist files.
 - **Before `git commit`:** run `make format`, `make check`, and `make run_kernel AUTO_TEST=regression`.
 - **CI/PR/issue investigation:** use `gh` for remote GitHub CI, PR, and issue state when needed.
 
@@ -88,19 +88,41 @@ gVisor tests live in `test/initramfs/src/conformance/gvisor`.
   make run_kernel AUTO_TEST=conformance CONFORMANCE_TEST_SUITE=gvisor
   ```
 
-- To run only specific gVisor tests, temporarily edit
-  `test/initramfs/src/conformance/gvisor/Makefile` so the `TESTS ?=` list
-  contains only the failed binaries, then run the same conformance command. The
-  gVisor runner loops over the `*_test` binaries actually packaged under
-  `/opt/gvisor/tests`, so reducing the packaged `TESTS` list is the reliable
-  local narrowing mechanism.
+- Select one gVisor test binary with the top-level Make variable
+  `CONFORMANCE_TEST_SELECTOR`:
 
-- Do not try to select gVisor tests by passing environment variables to
-  `make run_kernel`, `make kernel`, or `make initramfs` (for example
-  `TESTS=...`, `GVISOR_TESTS=...`, `GTEST_FILTER=...`, or similar). The gVisor
-  Makefile is consumed inside the Nix initramfs build, and those top-level
-  command-line environment overrides are not a reliable way to change which
-  binaries are packaged or run.
+  ```bash
+  make run_kernel AUTO_TEST=conformance CONFORMANCE_TEST_SUITE=gvisor \
+    CONFORMANCE_TEST_SELECTOR=open_test
+  ```
+
+  The value is a comma-separated list of `*_test` binary names. For example,
+  use `CONFORMANCE_TEST_SELECTOR=open_test,xattr_test` to run both binaries.
+  Selected binaries remain packaged through the normal initramfs flow; no
+  source, Makefile, test-list, or blocklist edit is needed.
+
+- To run one or more cases inside a selected binary, also set
+  `CONFORMANCE_TEST_GVISOR_FILTER` to a positive GoogleTest filter:
+
+  ```bash
+  make run_kernel AUTO_TEST=conformance CONFORMANCE_TEST_SUITE=gvisor \
+    CONFORMANCE_TEST_SELECTOR=epoll_test \
+    CONFORMANCE_TEST_GVISOR_FILTER='EpollTest.CloseFile:EpollTest.Oneshot'
+  ```
+
+  Quote filters that contain shell metacharacters such as `*`. The filter is
+  applied to every selected binary, so normally combine it with exactly one
+  binary unless the same filter intentionally applies to all of them.
+
+- Setting `CONFORMANCE_TEST_SELECTOR` bypasses the normal and extra blocklists
+  for the selected binaries. If `CONFORMANCE_TEST_GVISOR_FILTER` is omitted,
+  all cases in each selected binary run (`*`). The gVisor filter is only used
+  when `CONFORMANCE_TEST_SELECTOR` is non-empty.
+
+- Use these repository-supported variables rather than editing
+  `test/initramfs/src/conformance/gvisor/Makefile` or blocklist files. Do not
+  substitute similarly named variables such as `TESTS`, `GVISOR_TESTS`, or
+  `GTEST_FILTER`; they are not the top-level gVisor selection interface.
 
 ## Git Discipline
 
