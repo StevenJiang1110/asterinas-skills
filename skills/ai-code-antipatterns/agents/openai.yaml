@@ -1,0 +1,4 @@
+interface:
+  display_name: "AI Code Anti-patterns"
+  short_description: "Review, judge, and fix AI-style code smells"
+  default_prompt: "Use $ai-code-antipatterns to review the code scope I specify for AI-generated anti-patterns."

@@ -8,6 +8,7 @@ Codex skills for Asterinas development workflows.
 - `publish-existing-skill`: imports an existing local Codex skill into this GitHub skill collection and pushes it.
 - `technical-writing`: drafts technical documents with concrete problem statements, causal explanations, precise semantic distinctions, and actionable proposals.
 - `linux-source-reader`: locates, fetches, navigates, and explains Linux kernel source code and its build/configuration wiring.
+- `ai-code-antipatterns`: reviews, judges, or fixes recurring AI-generated code anti-patterns using an embedded evidence catalog.
 
 ## Install
 
@@ -19,11 +20,18 @@ mkdir -p "${CODEX_HOME:-$HOME/.codex}/skills"
 cp -a asterinas-skills/skills/asterinas-validate-workflow "${CODEX_HOME:-$HOME/.codex}/skills/"
 ```
 
-To install the two general-purpose skills:
+To install `technical-writing` and `linux-source-reader`:
 
 ```bash
 cp -a asterinas-skills/skills/technical-writing "${CODEX_HOME:-$HOME/.codex}/skills/"
 cp -a asterinas-skills/skills/linux-source-reader "${CODEX_HOME:-$HOME/.codex}/skills/"
+```
+
+To install the AI code anti-pattern skill at
+`${CODEX_HOME:-$HOME/.codex}/skills/ai-code-antipatterns`:
+
+```bash
+cp -a asterinas-skills/skills/ai-code-antipatterns "${CODEX_HOME:-$HOME/.codex}/skills/"
 ```
 
 To install every skill in this repository:
