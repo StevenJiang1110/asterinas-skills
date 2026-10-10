@@ -62,6 +62,42 @@ fn caller(value: usize) -> Option<usize> {
         missing = expected - patterns
         assert not missing, f"scanner missed expected candidates: {sorted(missing)}"
 
+        diff = root / "sample.diff"
+        diff.write_text(
+            """diff --git a/sample.rs b/sample.rs
+--- a/sample.rs
++++ b/sample.rs
+@@ -1 +1,2 @@
+ fn current_value() {}
++
+@@ -3 +4 @@
+-// Old note.
++// Reworded note.
+""",
+            encoding="utf-8",
+        )
+        completed = subprocess.run(
+            [
+                sys.executable,
+                str(SCRIPT_DIR / "scan_candidates.py"),
+                "--repo-root",
+                str(root),
+                "--diff-file",
+                str(diff),
+            ],
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+        result = json.loads(completed.stdout)
+        scope_candidates = [
+            candidate
+            for candidate in result["candidates"]
+            if candidate["pattern_id"] == "AP-SCOPE"
+        ]
+        assert len(scope_candidates) == 2
+        assert {candidate["line"] for candidate in scope_candidates} == {2, 4}
+
 
 def finding(pattern: str, line: int, confidence: str = "high") -> dict[str, object]:
     return {

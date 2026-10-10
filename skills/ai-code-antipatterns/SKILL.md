@@ -32,14 +32,16 @@ A reportable finding must:
 
 1. match a defined pattern;
 2. identify concrete source locations;
-3. explain the relevant caller, type, invariant, existing repository facility, permanent documentation context, or upstream semantics;
+3. explain the relevant caller, type, invariant, stated change goal, existing repository facility, permanent documentation context, or upstream semantics;
 4. survive a plausible false-positive check from the pattern reference.
 
-Use `confidence: high` only after that verification. Do not report candidate matches as findings merely because they contain `checked_*`, a short function, a URL, or a verbose comment.
+Use `confidence: high` only after that verification. Do not report candidate matches as findings merely because they contain `checked_*`, a short function, a URL, a verbose comment, or an added blank line.
 
-Exclude ordinary correctness bugs, naming preferences, missing tests, generic duplication, and routine scope creep unless they concretely instantiate one of the defined AI-skewed patterns. Do not claim that the author used AI. Even in judge mode, state only whether the code provides reasonable grounds for suspicion that it was produced or accepted without serious inspection.
+Exclude ordinary correctness bugs, naming preferences, missing tests, generic duplication, and debatable scope preferences unless they concretely instantiate one of the defined AI-skewed patterns. Do not claim that the author used AI. Even in judge mode, state only whether the code provides reasonable grounds for suspicion that it was produced or accepted without serious inspection.
 
 When a finding depends on an external reference, open the target and verify the claimed version, symbol, lines, and semantics. When it depends on repository context, search for callers and existing equivalent facilities rather than reasoning from the changed file alone.
+
+For `AP-SCOPE`, first establish the intended change from the user's request, PR title and description, linked issue, or commit messages. If the goal is unavailable or ambiguous, do not turn apparent diff noise into a high-confidence finding.
 
 ## Mode routing
 

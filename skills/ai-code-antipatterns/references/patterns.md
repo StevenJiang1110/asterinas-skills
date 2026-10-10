@@ -57,3 +57,13 @@ The implementation mirrors an upstream function split, name, temporary, or call 
 Do not flag intentional structural alignment that is justified by future synchronization, a shared ABI, or a local design that genuinely matches upstream.
 
 Case: In [Asterinas PR #3365](https://github.com/asterinas/asterinas/pull/3365#discussion_r3628791883), the code performed `get_xattr` before `remove_xattr` to mirror Linux's killpriv split. Asterinas's `remove_xattr` already handled absence, so the copied preflight step was redundant.
+
+## AP-SCOPE: Unrelated edits bundled into the change
+
+The patch performs opportunistic cleanup outside its stated goal while changing nearby code. Common forms include altering unrelated comments, adding or removing blank lines, renaming unaffected locals, or reformatting logic that the requested behavior does not touch. These changes create review noise and often indicate that a generated patch was accepted without checking every hunk against the requested task.
+
+High-confidence evidence requires a concrete statement of the intended change and a demonstration that the suspicious edit is not needed to implement, test, document, generate, or format that change. Do not flag prerequisite refactoring, required call-site updates, generated-file changes, repository-mandated formatter output, tests or documentation for the changed behavior, or an explicitly requested cleanup. Mere surprise about a hunk is not enough.
+
+Treat one contiguous edit or one mechanical sweep as one occurrence even if it changes many lines. Separate locations count independently only when each represents a distinct unrelated editing decision.
+
+Case: [Asterinas PR #3780](https://github.com/asterinas/asterinas/pull/3780) added lifecycle-aware host-process support for binding `virtiofsd` to QEMU. An early revision also inserted an extra blank line into existing `Bundle` code; [the review identified that edit as unrelated and requested its removal](https://github.com/asterinas/asterinas/pull/3780#discussion_r4013728678).

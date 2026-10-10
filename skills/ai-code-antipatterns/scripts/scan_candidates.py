@@ -272,6 +272,76 @@ def line_candidates(lines: list[SourceLine]) -> list[Candidate]:
     return candidates
 
 
+def scope_noise_candidates(diff: str) -> list[Candidate]:
+    """Find hunks whose changes consist only of comments or whitespace."""
+
+    candidates: list[Candidate] = []
+    current_path: str | None = None
+    new_line: int | None = None
+    hunk_start: int | None = None
+    changes: list[tuple[str, int, str]] = []
+
+    def flush_hunk() -> None:
+        if current_path is None or hunk_start is None or not changes:
+            return
+        if not all(not text.strip() or COMMENT_RE.match(text) for _, _, text in changes):
+            return
+
+        only_whitespace = all(not text.strip() for _, _, text in changes)
+        added = [(line, text) for prefix, line, text in changes if prefix == "+"]
+        line, evidence = added[0] if added else (hunk_start, changes[0][2])
+        candidates.append(
+            Candidate(
+                "AP-SCOPE",
+                current_path,
+                line,
+                (
+                    "whitespace-only diff hunk needs comparison with the stated change goal"
+                    if only_whitespace
+                    else "comment/whitespace-only diff hunk needs comparison with the stated change goal"
+                ),
+                short_evidence(evidence) or "<blank line>",
+            )
+        )
+
+    for raw in diff.splitlines():
+        if raw.startswith("+++ "):
+            flush_hunk()
+            changes = []
+            current_path = normalize_diff_path(raw[4:].split("\t", 1)[0])
+            new_line = None
+            hunk_start = None
+            continue
+
+        hunk = HUNK_RE.match(raw)
+        if hunk:
+            flush_hunk()
+            changes = []
+            new_line = int(hunk.group(1))
+            hunk_start = new_line
+            continue
+
+        if current_path is None or new_line is None:
+            continue
+        if raw.startswith("+") and not raw.startswith("+++"):
+            changes.append(("+", new_line, raw[1:]))
+            new_line += 1
+        elif raw.startswith("-") and not raw.startswith("---"):
+            changes.append(("-", new_line, raw[1:]))
+        elif raw.startswith(" "):
+            new_line += 1
+        elif raw.startswith("\\"):
+            continue
+        else:
+            flush_hunk()
+            changes = []
+            new_line = None
+            hunk_start = None
+
+    flush_hunk()
+    return candidates
+
+
 def rust_wrapper_candidates(
     texts: dict[str, str], scoped_lines: set[tuple[str, int]]
 ) -> list[Candidate]:
@@ -368,6 +438,8 @@ def main() -> int:
 
     scoped = {(line.path, line.line) for line in lines}
     candidates = line_candidates(lines)
+    if not args.files:
+        candidates.extend(scope_noise_candidates(diff))
     candidates.extend(rust_wrapper_candidates(texts, scoped))
     candidates = deduplicate(candidates)
 
@@ -378,7 +450,8 @@ def main() -> int:
         "candidates": [asdict(item) for item in candidates],
         "notes": [
             "These are heuristic candidates, not verified findings.",
-            "AP-REINVENT and most semantic AP-UPSTREAM cases require manual repository inspection.",
+            "AP-REINVENT, most semantic AP-UPSTREAM cases, and AP-SCOPE cases mixed with code changes require manual inspection.",
+            "An AP-SCOPE comment/whitespace-only hunk is reportable only after comparison with the stated change goal and formatter requirements.",
             "Absence of candidates does not establish absence of anti-patterns.",
         ],
     }

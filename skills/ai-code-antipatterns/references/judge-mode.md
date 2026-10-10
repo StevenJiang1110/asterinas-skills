@@ -21,6 +21,8 @@ Create a temporary findings JSON using this shape:
 
 One finding entry normally represents one independent source occurrence. A grouped entry may instead provide a `locations` array of `{ "path": ..., "line": ... }` objects. The scoring script deduplicates identical locations.
 
+For `AP-SCOPE`, count a contiguous unrelated edit or one mechanical sweep as one occurrence, not one occurrence per changed line. This prevents whitespace churn or a broad automated rewrite from inflating the judgment threshold.
+
 Run `scripts/judge_findings.py FINDINGS_JSON --mode MODE`. Supported calibrations are:
 
 - `lenient`: at least one high-confidence occurrence;

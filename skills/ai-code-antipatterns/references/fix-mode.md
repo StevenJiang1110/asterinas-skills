@@ -9,7 +9,8 @@ Prefer the smallest correction that removes the mechanism:
 - remove defensive branches only after proving failure impossible on all supported targets;
 - rewrite or delete comments so they record durable intent rather than syntax or patch history;
 - reuse an existing facility only after confirming equivalent semantics and acceptable dependencies;
-- translate upstream behavior into the local abstraction instead of preserving upstream internals.
+- translate upstream behavior into the local abstraction instead of preserving upstream internals;
+- remove unrelated diff fragments after proving they are unnecessary for the stated change, without broadly reverting pre-existing or user-authored work.
 
 Preserve observable behavior unless the anti-pattern itself introduced incorrect behavior. Do not bundle ordinary cleanup or unrelated defects into the fix. If a correct repair requires design judgment that the evidence does not resolve, leave it unchanged and report the decision instead of guessing.
 

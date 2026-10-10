@@ -4,6 +4,8 @@ Review the entire user-specified scope for every pattern in the catalog. Use the
 
 Follow changed code far enough to understand its callers, invariants, and existing alternatives. For a Git diff, review added and materially modified code, while using unchanged code as context. Do not report pre-existing anti-patterns unless the user explicitly includes existing code in scope.
 
+For a change review, establish the stated goal from the request, PR description, linked issue, or commit messages, then account for every changed hunk. Inspect comment-only and whitespace-only hunks rather than skipping them. Report `AP-SCOPE` only when the edit has no demonstrated role in implementing, validating, documenting, generating, or mechanically formatting the stated change.
+
 Write a Markdown report at the requested path, or `ai-antipattern-review.md` by default. Include:
 
 - the exact scope;
